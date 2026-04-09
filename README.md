@@ -35,7 +35,9 @@ The system is composed of four main components working in tandem:
 4.  **`dataset_generator.py` (The Tuner)**
     *   Reads the raw JSONL feedback and transforms it into standard fine-tuning formats.
     *   Outputs `sft_dataset.jsonl` (Chat ML format) for Supervised Fine-Tuning.
-    *   Outputs `dpo_dataset.jsonl` (Prompt, Chosen, Rejected format) for Direct Preference Optimization.
+5.  **`remote_sync.py` (The Auditor)**
+    *   Connects the local feedback loop to a larger model (Gemini Pro).
+    *   Uploads dissatisfaction clusters for "Bottleneck Analysis," allowing a larger brain to audit why the local model is failing.
 
 ---
 
@@ -46,7 +48,8 @@ The system is composed of four main components working in tandem:
     *   Default URI: `neo4j://localhost:7687`
     *   Default Auth: `neo4j` / `password` (Configurable in `src/config.py`)
 2.  **Ollama**: Must be installed and running locally.
-    *   Pull the target model: `ollama pull llama3.1`
+3.  **Gemini API (Optional)**: For remote analysis, obtain an API key from Google AI Studio.
+    *   Set `GEMINI_API_KEY` in `src/config.py`.
 
 ### Installation
 1.  **Activate Virtual Environment**:

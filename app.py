@@ -78,6 +78,21 @@ with st.sidebar:
                 st.error(f"Error: {e}")
 
     st.markdown("---")
+    st.markdown("### ☁️ Remote Analysis")
+    if st.button("Sync with Big Model (Gemini)"):
+        with st.spinner("Uploading dataset to Gemini Pro for analysis..."):
+            import remote_sync
+            try:
+                # Analyze the SFT dataset
+                remote_sync.sync_dataset_for_analysis(
+                    "sft_dataset.jsonl", 
+                    "You are an AI Trainer. Analyze these failure-correction pairs and summarize the core weaknesses of the current local model."
+                )
+                st.success("Analysis complete! (Check terminal for full output)")
+            except Exception as e:
+                st.error(f"Sync Failed: {e}")
+
+    st.markdown("---")
     st.markdown("### 📊 Metrics & Rules")
     
     # Checkbox to view active rules

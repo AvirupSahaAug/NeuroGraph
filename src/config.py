@@ -13,3 +13,7 @@ EMBEDDING_MODEL = "nomic-embed-text:latest"
 
 # Logging
 DATASET_FILE = "dissatisfaction_dataset.jsonl"
+
+# Remote Inference (Gemini Pro / External Model)
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "YOUR_API_KEY_HERE")
+GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key="
