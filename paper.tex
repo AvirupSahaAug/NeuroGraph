@@ -1,0 +1,72 @@
+\documentclass[a4paper,12pt]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{geometry}
+
+\geometry{
+ a4paper,
+ total={170mm,257mm},
+ left=20mm,
+ top=20mm,
+}
+
+\title{\textbf{NeuroGraph: A Self-Improving Agentic Architecture for Graph Retrieval-Augmented Generation}}
+\author{Avirup \\ \textit{Department of Computer Science}}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Retrieval-Augmented Generation (RAG) has emerged as a powerful technique to ground Large Language Models (LLMs) in external data. However, traditional vector-based RAG often lacks structured reasoning and a mechanism for long-term self-correction. In this paper, we introduce \textbf{NeuroGraph}, an experimental agentic architecture that combines GraphRAG with an automated Reinforcement Learning from Human Feedback (RLHF) loop. The system employs a tri-agent approach---The Builder, The Actor, and The Critic---to dynamically construct a Knowledge Graph from user interactions while simultaneously creating a dataset of failures for future fine-tuning. This approach allows the system to not only retrieve context but to actively learn from user dissatisfaction in real-time.
+\end{abstract}
+
+\section{Introduction}
+Large Language Models (LLMs) often suffer from "hallucinations" and a lack of long-term consistency. While RAG systems address the knowledge gap by retrieving documents, they are typically static; they do not learn or adapt based on their mistakes during interaction. Furthermore, vector databases capture semantic similarity but struggle with complex structural relationships between entities.
+
+To address these limitations, NeuroGraph implements two key innovations:
+\begin{enumerate}
+    \item \textbf{Graph-Based Memory:} Using a Graph Database (Neo4j) to map entities and relationships, providing structured context.
+    \item \textbf{The "Critic" Loop:} A background agent that monitors user sentiment to identify and log failures, enabling an automated data fly-wheel for Direct Preference Optimization (DPO).
+\end{enumerate}
+
+\section{System Architecture}
+The NeuroGraph architecture consists of three specialized agents working in tandem.
+
+\subsection{1. The Builder (Graph Manager)}
+The Builder is responsible for long-term memory acquisition. It interfaces with the Neo4j database to store information as triplets: $(Subject) \xrightarrow{RELATION} (Object)$.
+\begin{itemize}
+    \item \textbf{Extraction:} The agent processes user input (e.g., "I am building a React app") and utilizes an LLM to extract structured data: \texttt{\{source: 'User', relation: 'BUILDING', target: 'React App'\}}.
+    \item \textbf{Merging:} These triplets are merged into the graph, ensuring no duplication while building a dense web of knowledge over time.
+\end{itemize}
+
+\subsection{2. The Actor (RAG Engine)}
+The Actor serves as the primary interface for user interaction.
+\begin{itemize}
+    \item \textbf{Context Retrieval:} Unlike simple vector search, the Actor queries the graph for direct neighbors of the entities mentioned in the user's prompt. This retrieves explicit relationships (e.g., \textit{User LIKES Python}) to ground the generation.
+    \item \textbf{Generation:} The retrieved graph context is injected into the system prompt of a local LLM (Llama 3.1) to generate a factually grounded response.
+\end{itemize}
+
+\subsection{3. The Critic (Dissatisfaction Monitor)}
+The Critic addresses the challenge of self-improvement. It runs asynchronously to analyze the quality of the interaction.
+\begin{itemize}
+    \item \textbf{Sentiment Analysis:} The Critic evaluates the user's latest response to the previous bot reply. It looks for signals of frustration (e.g., "No, that's wrong", "Stop").
+    \item \textbf{Data Collection:} Upon detecting dissatisfaction, the Critic logs the interaction pair (User Input, Bot Reply, Reason) into a \texttt{dissatisfaction\_dataset.jsonl}. This synthetic dataset serves as the ground truth for future alignment training (DPO or Fine-Tuning).
+\end{itemize}
+
+\section{Implementation Details}
+The prototype is implemented in Python, leveraging the following technologies:
+\begin{itemize}
+    \item \textbf{Database:} Neo4j Community Edition for graph storage.
+    \item \textbf{LLM Backend:} Ollama running Llama 3.1 (8B Parameters).
+    \item \textbf{Orchestration:} LangChain for prompt management and chain execution.
+\end{itemize}
+
+\section{Conclusion and Future Work}
+NeuroGraph demonstrates a viable path toward self-correcting AI systems. By closing the loop between retrieval and user feedback, we move from static information retrieval to dynamic, learning agents. Future work involves automating the fine-tuning pipeline, where the logged dissatisfaction dataset automatically triggers a DPO training run to update the model weights.
+
+\end{document}

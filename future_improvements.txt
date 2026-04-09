@@ -1,0 +1,19 @@
+1.  **Vector Search for Rule Retrieval**
+    Currently, in `src/graph_manager.py`, the `get_focused_rules()` method fetches all stored `SyntaxRule` nodes and dumps them into the system prompt. If you teach the bot 50 rules, this will explode the context window and slow down Llama.
+    *   **What to add:** Implement Neo4j Vector Indexes. When a user asks a question, embed the prompt and only query the top 3-5 most relevant syntax rules from the graph instead of loading everything.
+
+2.  **Auto-Correction / Retry Mechanism**
+    Right now, `monitor.py` does a great job of detecting user frustration and logging the `Mistake` -> `Issue` -> `Cause` into Neo4j and JSONL. But it stops there.
+    *   **What to add:** Modify `app.py` so that if `monitor.analyze_interaction()` returns `is_dissatisfied=True`, the system automatically says: "I noticed I ignored your instructions. Let me fix that immediately." and automatically triggers a generated retry using the newly identified cause and suggested_fix context.
+
+3.  **Automated Local Fine-Tuning Pipeline**
+    You've already built `dataset_generator.py` to convert the `dissatisfaction_dataset.jsonl` into `requirements_dataset.jsonl` (Requirement/Correction pairs). This is the perfect setup for Direct Preference Optimization (DPO).
+    *   **What to add:** A new `src/trainer.py` script using a library like Unsloth or HuggingFace PEFT (LoRA). You can add a button in the Streamlit UI saying "Initiate Nightly Training", which grabs the JSONL file and permanently fine-tunes the local Llama 3.1 LLM so it stops making those graph-logged mistakes forever.
+
+4.  **Interactive Graph Visualization in UI**
+    You are building an awesome Knowledge Graph behind the scenes, but the user can't see it in the Streamlit app.
+    *   **What to add:** Use a library like `streamlit-agraph` or `pyvis` in `app.py`. Create a visual node graph in the UI where users can watch the nodes (`Mistake`, `Issue`, `Cause`, `SyntaxRule`) physically connect to each other in real-time as they chat.
+
+5.  **Rule Conflict Resolution**
+    What happens if the user says "Always use snake_case" today, and tomorrow they say "Always use camelCase"? The LLM will receive both rules in the prompt and hallucinate.
+    *   **What to add:** Before `graph_manager.py` creates a new `SyntaxRule` node, use a quick LLM check to see if it contradicts existing rules. If it does, ask the user: "This conflicts with your previous rule to use snake_case. Should I overwrite it?" If yes, create a `[:OVERRIDES]` relationship in Neo4j to disable the old rule.
